@@ -20,25 +20,65 @@ loadSprite('goomba', 'KPO3fR9.png')
 loadSprite('surpresa', 'gesQ1KP.png')
 loadSprite('unboxed', 'bdrLpi6.png')
 loadSprite('moeda', 'wbKxhcd.png')
-loadSprite('mario', 'Wb1qfhK.png')
 loadSprite('cogumelo', '0wMd92p.png')
+
+loadSprite('tijolo', 'pogC9x5.png') // tijolo
+loadSprite('tubo-top-left', 'ReTPiWY.png') // tubo esquerdo
+loadSprite('tubo-top-right', 'hj2GK4n.png') // tubo direito
+loadSprite('tubo-bottom-left', 'c1cYSbt.png') // tubo parte de baixo esquerdo
+loadSprite('tubo-bottom-right', 'nqQ79eI.png') // tubo parte de baixo direito
+
+loadSprite('blue-bloco', 'fVscIbn.png') // bloco azul
+loadSprite('blue-tijolo', '3e5YRQd.png') // tijolo azul
+loadSprite('blue-aco', 'gqVoI2b.png') // bloco de aço azul
+loadSprite('blue-goomba', 'SvV4ueD.png')
+
+loadSprite('mario', 'OzrEnBy.png', {
+  sliceX: 3.9,
+  anims:{
+    idle: {
+      from: 0,
+      to: 0
+    },
+    move: {
+      from: 1,
+      to: 2
+    }
+  }
+})
 
 //scenes:
 scene("game", ({ score }) => {
   layer(["background", "object", "ui"], "object")
 
-  const map = [
-    '=                                     =',
-    '=                                     =',
-    '=                                     =',
-    '=                                     =',
-    '=                                     =',
-    '=                                     =',
-    '=    %    =*=%=                       =',
-    '=                                     =',
-    '=                                     =',
-    '=                ^         ^          =',
-    '=======================================',
+  const maps = [
+    [
+      '~                                   ~', 
+      '~                                   ~',
+      '~                                   ~',
+      '~                                   ~',
+      '~                                   ~',
+      '~                                   ~',
+      '~     %   =*=%=                     ~',
+      '~                                   ~',
+      '~                           -+      ~',
+      '~                   ^   ^   ()      ~',
+      '=====================================',
+    ],
+    [       
+      '/                                   /',
+      '/                                   /',
+      '/                                   /',
+      '/                                   /',
+      '/                                   /',
+      '/                                   /',
+      '/    @@@@@@                         /',
+      '/                     x x           /',
+      '/                   x x x x    -+   /',
+      '/          z   z  x x x x x x  ()   /',
+      '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+    ],
+        
   ]
 
   //significados para as imagens
@@ -52,10 +92,20 @@ scene("game", ({ score }) => {
     '}': [sprite('unboxed'), solid()],
     '^': [sprite('goomba'), 'dangerous'],
     '#': [sprite('cogumelo'), 'cogumelo', body()],
-  }
 
+    '~': [sprite('tijolo'), solid()],
+    '(': [sprite('tubo-bottom-left'), solid(), scale(0.5)],
+    ')': [sprite('tubo-bottom-right'), solid(), scale(0.5)],
+    '-': [sprite('tubo-top-left'), solid(), 'tubo', scale(0.5)],
+    '+': [sprite('tubo-top-right'), solid(), 'tubo', scale(0.5)],
+    '!': [sprite('blue-bloco'), solid(), scale(0.5)],
+    '/': [sprite('blue-tijolo'), solid(), scale(0.5)],
+    'z': [sprite('blue-goomba'),body(), 'dangerous', scale(0.5)],
+    'x': [sprite('blue-aco'), solid(), scale(0.5)],
+  }
+  https://imgur.com/3e5YRQd
   //adicionando o mapa e as configurações das sprites
-  const gameLevel = addLevel(map, levelConfig)
+  const gameLevel = addLevel(maps[level], levelConfig)
 
   //Adicionando contagem de moedas
   const scoreLabel = add([
@@ -86,7 +136,10 @@ scene("game", ({ score }) => {
 
   //Adicionando o mario na cena:
   const player = add([
-    sprite('mario'),
+    sprite('mario', {
+      animSpeed: 0.1,
+      frame: 0
+    }),
     solid(),
     body(),
     big(),
@@ -111,6 +164,25 @@ scene("game", ({ score }) => {
        isJumping = true
      }
   })
+// Animação do mario em movimento
+  keyPress('left', () => {
+    player.flipX(true)
+    player.play('move')
+ })
+ keyPress('right', () => {
+  player.flipX(false)
+  player.play('move')
+})
+
+// Animação do mario em parado
+keyRelease('left', () => {
+  player.flipX(true)
+  player.play('idle')
+})
+keyRelease('right', () => {
+  player.flipX(false)
+player.play('idle')
+})
 
   //* Ação dos personagem do game: *
   //goomba inimigo do mario:
@@ -159,7 +231,7 @@ scene("game", ({ score }) => {
      if(isBig){
        player.smallify()
      }else {
-       go('lose')
+       go('lose', {score: scoreLabel.value})
      }
    }
   })
@@ -172,7 +244,8 @@ scene("game", ({ score }) => {
 
 })
 
-scene('lose', () => {
-  
+//Cenário de game over
+scene('lose', ({score}) => {
+  add([text('Score: ' + score, 20), origin('center'), pos(width()/2, height()/2)])
 })
 go("game", ({ score: 0 }))

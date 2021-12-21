@@ -48,38 +48,72 @@ loadSprite('mario', 'OzrEnBy.png', {
 })
 
 //scenes:
-scene("game", ({ score }) => {
+scene("game", ({ level, score, big }) => {
   layer(["background", "object", "ui"], "object")
 
   const maps = [
     [
-      '~                                   ~', 
-      '~                                   ~',
-      '~                                   ~',
-      '~                                   ~',
-      '~                                   ~',
-      '~                                   ~',
-      '~     %   =*=%=                     ~',
-      '~                                   ~',
-      '~                           -+      ~',
-      '~                   ^   ^   ()      ~',
-      '=====================================',
+        '~                                     ~', 
+        '~                                     ~',
+        '~                                     ~',
+        '~                                     ~',
+        '~                                     ~',
+        '~                                     ~',
+        '~       %   =*=%=                     ~',
+        '~                                     ~',
+        '~                             -+      ~',
+        '~                     ^   ^   ()      ~',
+        '=======================================',
     ],
     [       
-      '/                                   /',
-      '/                                   /',
-      '/                                   /',
-      '/                                   /',
-      '/                                   /',
-      '/                                   /',
-      '/    @@@@@@                         /',
-      '/                     x x           /',
-      '/                   x x x x    -+   /',
-      '/          z   z  x x x x x x  ()   /',
-      '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+        '/                                     /',
+        '/                                     /',
+        '/                                     /',
+        '/                                     /',
+        '/                                     /',
+        '/                                     /',
+        '/     %%%%%%                          /',
+        '/                      x x            /',
+        '/                    x x x x    -+    /',
+        '/           z   z  x x x x x x  ()    /',
+        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
     ],
-        
-  ]
+    [
+        '                                       ',
+        '                              !        ',
+        '                             %%%%%%    ',
+        '                      !                ',
+        '              %%    %%%%%              ',
+        '       %%%                             ',
+        '                                       ',
+        '    %                                  ',
+        '==     !    !   =  ^  ^    !    !      ',
+        '============================    ======/',
+        '                           =    =     /',
+        '                                      /',
+        '         !                            /',
+        '       %*%                            /',
+        '  -+           %                      /',
+        '  ()!         !    ^                  /',
+        '%%%%%%%%%%%%%%%%%%%   ================/',
+        '                                       ',
+        '                                       ',
+        '                                       ',
+      ],
+      [
+        '=                                     =',
+        '=                                     =',
+        '=                                     =',
+        '=                                     =',
+        '=                                     =',
+        '=     ======          =               =',
+        '=                  =  =  =            =',
+        '=               =  =  =  =  =   -+    =',
+        '=               =  =  =  =  =   ()    =',
+        '=======================================',
+      ],
+
+]
 
   //significados para as imagens
   const levelConfig ={
@@ -103,7 +137,7 @@ scene("game", ({ score }) => {
     'z': [sprite('blue-goomba'),body(), 'dangerous', scale(0.5)],
     'x': [sprite('blue-aco'), solid(), scale(0.5)],
   }
-  https://imgur.com/3e5YRQd
+  //https://imgur.com/3e5YRQd
   //adicionando o mapa e as configurações das sprites
   const gameLevel = addLevel(maps[level], levelConfig)
 
@@ -116,6 +150,9 @@ scene("game", ({ score }) => {
       value: score
     }
   ])
+
+  //Nível do jogo:
+  add([text('Level:  ' + parseInt(level + 1), 10), pos(25,30)])
 
   //Mario ao chocar com cogumelo irá crescer.
   function big() {
@@ -146,6 +183,11 @@ scene("game", ({ score }) => {
     pos(60,0),
     origin('bot')
   ])
+
+  //Validar se o mario está grande:
+  if(isBig){
+    player.biggify
+  }
 
   //Movimento do mario:
   keyDown('left', () => {
@@ -236,16 +278,31 @@ player.play('idle')
    }
   })
 
+  //colisões com a moeda
   player.collides('moeda', (object) => {
     destroy(object)
     scoreLabel.value++
     scoreLabel.text = 'Moedas: ' + scoreLabel.value
   })
 
+   //colisões com o tubo, irá para um outro nível.
+   player.collides('tubo', () => {
+      keyPress('down', () => {
+        go('game', {
+          level: (level + 1) % maps.length,
+          score: scoreLabel.value,
+          Big: isBig
+        })
+      })
+   })
+
 })
 
 //Cenário de game over
 scene('lose', ({score}) => {
   add([text('Score: ' + score, 20), origin('center'), pos(width()/2, height()/2)])
+  keyPress('space', () => {
+    go("game", { level: 0, score: 0, big: isBig })
+  })
 })
-go("game", ({ score: 0 }))
+go("game", ({level: 0, score: 0, big: isBig }))
